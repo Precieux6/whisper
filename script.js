@@ -6,7 +6,7 @@ const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SU
 
 // Gestion utilisateur local
 let currentUser = JSON.parse(localStorage.getItem('whisper_current_user')) || null;
-let targetUser = null; // Utilisateur dont on visite le profil
+let targetUser = null;
 let messages = [];
 let currentPaymentContext = { type: 'single', messageId: null };
 
@@ -14,24 +14,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 const messageInput = document.getElementById('messageInput');
 if (messageInput) updateCounter(messageInput);
 
-// Analyser l'URL pour voir si on visite un profil (ex: ?u=precieux)
 const urlParams = new URLSearchParams(window.location.search);
 const profileUsername = urlParams.get('u');
 
 if (profileUsername) {
-// Mode Visiteur : on cherche le propriétaire du lien dans Supabase
 await loadTargetUser(profileUsername);
 } else if (currentUser) {
-// Mode Propriétaire connecté : redirection sur son dashboard
 setupHeaderForOwner();
 switchView('dashboard');
 } else {
-// Premier accès sans lien : inviter à créer un compte ou afficher un profil par défaut
 setupHeaderForGuest();
 }
 });
 
-// Charger l'utilisateur cible depuis Supabase via son username
 async function loadTargetUser(username) {
 if (!supabase) return;
 const cleanUsername = username.startsWith('@') ? username : '@' + username;
@@ -48,20 +43,24 @@ return;
 }
 
 targetUser = data;
-document.getElementById('targetUsername').textContent = targetUser.username;
+const targetElem = document.getElementById('targetUsername');
+if (targetElem) targetElem.textContent = targetUser.username;
 
-// S'assurer que l'expéditeur ne voit pas le bouton tableau de bord
-document.getElementById('headerActions').innerHTML = `
+const headerActions = document.getElementById('headerActions');
+if (headerActions) {
+headerActions.innerHTML = `
 <button onclick="openRegisterModal()" class="bg-amber-500/10 text-amber-400 text-xs font-semibold px-3 py-2 rounded-xl border border-amber-500/20">
 Créer mon lien
 </button>
 `;
 }
+}
 
-// Configuration de l'en-tête pour le propriétaire
 function setupHeaderForOwner() {
 if (!currentUser) return;
-document.getElementById('headerActions').innerHTML = `
+const headerActions = document.getElementById('headerActions');
+if (headerActions) {
+headerActions.innerHTML = `
 <button onclick="switchView('dashboard')" id="btnDashboard" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700">
 Mon Tableau de bord
 </button>
@@ -69,16 +68,22 @@ Mon Tableau de bord
 Envoyer un message
 </button>
 `;
-document.getElementById('myUsernameDisplay').textContent = currentUser.username;
-document.getElementById('myLinkDisplay').textContent = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
+}
+const userDisplay = document.getElementById('myUsernameDisplay');
+const linkDisplay = document.getElementById('myLinkDisplay');
+if (userDisplay) userDisplay.textContent = currentUser.username;
+if (linkDisplay) linkDisplay.textContent = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
 }
 
 function setupHeaderForGuest() {
-document.getElementById('headerActions').innerHTML = `
+const headerActions = document.getElementById('headerActions');
+if (headerActions) {
+headerActions.innerHTML = `
 <button onclick="openRegisterModal()" class="bg-amber-500 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg">
 Créer mon lien Whisper
 </button>
 `;
+}
 }
 
 function updateCounter(textarea) {
@@ -114,22 +119,21 @@ if (btnPublic) btnPublic.classList.add('hidden');
 }
 }
 
-// Inscription / Création automatique d'un utilisateur dans Supabase
 async function handleCreateUser(e) {
 e.preventDefault();
 const input = document.getElementById('newUsernameInput');
+if (!input) return;
 let username = input.value.trim().toLowerCase();
 if (!username) return;
 
 if (!username.startsWith('@')) username = '@' + username;
-const secretToken = "token_" + Math.random().toString(36.substring(2));
+const secretToken = "token_" + Math.random().toString(36).substring(2);
 
 if (!supabase) {
 alert("Erreur de connexion à Supabase.");
 return;
 }
 
-// Insérer dans la table users
 const { data, error } = await supabase
 .from('users')
 .insert([{ username: username, secret_token: secretToken }])
@@ -137,7 +141,7 @@ const { data, error } = await supabase
 .single();
 
 if (error) {
-alert("Ce pseudo est déjà pris ou une erreur est survenue. Choisis-en un autre.");
+alert("Ce pseudo est déjà pris ou une erreur est survenue.");
 return;
 }
 
@@ -145,11 +149,9 @@ currentUser = data;
 localStorage.setItem('whisper_current_user', JSON.stringify(currentUser));
 closeRegisterModal();
 
-// Rediriger vers son propre lien / tableau de bord
 window.location.href = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
 }
 
-// Envoyer un message anonyme rattaché au bon user_id
 async function handleSendConfession(e) {
 e.preventDefault();
 const input = document.getElementById('messageInput');
@@ -184,7 +186,7 @@ return;
 
 input.value = '';
 updateCounter(input);
-switchView('success'); // Afficher la vue de succès avec option de création de lien
+switchView('success');
 }
 
 async function fetchMessages() {
@@ -269,8 +271,12 @@ if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 
 async function processFedaPayPayment(e) {
 e.preventDefault();
-const name = document.getElementById('payerName').value;
-const phone = document.getElementById('payerPhone').value;
+const nameElem = document.getElementById('payerName');
+const phoneElem = document.getElementById('payerPhone');
+if (!nameElem || !phoneElem) return;
+
+const name = nameElem.value;
+const phone = phoneElem.value;
 if(!name || !phone) return;
 
 alert(`[Simulateur FedaPay]\n\nPaiement de 300 FCFA initié sur le ${phone}.`);
