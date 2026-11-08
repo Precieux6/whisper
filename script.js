@@ -35,7 +35,7 @@ let messages = JSON.parse(localStorage.getItem('whisper_messages')) || [
 ];
 
 let currentPaymentContext = {
-    type: 'single', // 'single' (300 FCFA) ou 'weekly' (2000 FCFA)
+    type: 'single', // 'single' (300 FCFA) ou 'weekly' (1800 FCFA)
     messageId: null
 };
 
@@ -179,7 +179,7 @@ function processFedaPayPayment(e) {
 
     alert(`[Simulateur FedaPay / USSD Push]
 
-Une demande de paiement de ${currentPaymentContext.type === 'single' ? '300' : '2000'} FCFA a été envoyée sur le ${phone}. Veuillez valider avec votre code PIN Mobile Money.`);
+Une demande de paiement de ${currentPaymentContext.type === 'single' ? '300' : '1800'} FCFA a été envoyée sur le ${phone}. Veuillez valider avec votre code PIN Mobile Money.`);
 
     if (currentPaymentContext.type === 'single') {
         const msg = messages.find(m => m.id === currentPaymentContext.messageId);
