@@ -2,15 +2,15 @@
 const SUPABASE_URL = "https://yhwgcexmwyuoezezastb.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_aYnG3MV_pacbBlHeMXBMKw_jqrJdG8F"; 
 
-// Empêche tout conflit de double déclaration
+// Initialisation unique et sécurisée de l'instance Supabase
 window.whisperDb = window.whisperDb || (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
-const supabase = window.whisperDb;
+const supabaseClient = window.whisperDb;
 
 // Gestion utilisateur local
 let currentUser = JSON.parse(localStorage.getItem('whisper_current_user')) || null;
 let targetUser = null; 
 let messages = [];
-let currentPaymentContext = { type: 'single', messageId: null };
+let currentPaymentContext = { messageId: null };
 
 document.addEventListener('DOMContentLoaded', async () => {
     const messageInput = document.getElementById('messageInput');
@@ -30,10 +30,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadTargetUser(username) {
-    if (!supabase) return;
+    if (!supabaseClient) return;
     const cleanUsername = username.startsWith('@') ? username : '@' + username;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('users')
         .select('*')
         .eq('username', cleanUsername)
@@ -131,12 +131,12 @@ async function handleCreateUser(e) {
     if (!username.startsWith('@')) username = '@' + username;
     const secretToken = "token_" + Math.random().toString(36).substring(2);
 
-    if (!supabase) {
+    if (!supabaseClient) {
         alert("Erreur de connexion à Supabase.");
         return;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('users')
         .insert([{ username: username, secret_token: secretToken }])
         .select()
@@ -167,7 +167,7 @@ async function handleSendConfession(e) {
 
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString();
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from('messages')
         .insert([
             {
@@ -192,9 +192,9 @@ async function handleSendConfession(e) {
 }
 
 async function fetchMessages() {
-    if (!supabase || !currentUser) return;
+    if (!supabaseClient || !currentUser) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('messages')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -240,7 +240,7 @@ function renderDashboard() {
                 ` : `
                     <div class="flex flex-wrap justify-between items-center pt-2 border-t border-slate-900 gap-2">
                         <span class="text-[11px] text-gray-500">Reçu à ${timeAgo} (Expire dans 30h)</span>
-                        <button onclick="openCheckoutModal('single', '${msg.id}')" class="bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors border border-amber-400/20">
+                        <button onclick="openCheckoutModal('${msg.id}')" class="bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors border border-amber-400/20">
                             Découvrir les indices (300 FCFA)
                         </button>
                     </div>
@@ -281,10 +281,16 @@ async function processFedaPayPayment(e) {
     const phone = phoneElem.value;
     if(!name || !phone) return;
 
-    alert(`[Simulateur FedaPay]\n\nPaiement de 300 FCFA initié sur le ${phone}.`);
+    alert(`[Intégration FedaPay]\n\nPaiement de 300 FCFA initié pour le message ${currentPaymentContext.messageId} via ${phone}.`);
 
-    if (currentPaymentContext.messageId && supabase) {
-        await supabase.from('messages').update({ is_paid: true }).eq('id', currentPaymentContext.messageId);
+    /* 
+       Rappel pour la mise en production FedaPay :
+       Ici, tu initialiseras le widget FedaPay en passant ton custom_metadata contenant { message_id: currentPaymentContext.messageId }.
+       Le webhook (webhook.js) se chargera ensuite de basculer is_paid à true de manière sécurisée côté serveur.
+    */
+
+    if (currentPaymentContext.messageId && supabaseClient) {
+        await supabaseClient.from('messages').update({ is_paid: true }).eq('id', currentPaymentContext.messageId);
     }
 
     closeCheckoutModal();
@@ -303,3 +309,15 @@ function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
+
+// Rendre les fonctions accessibles globalement pour le HTML (onclick, oninput, etc.)
+window.openRegisterModal = openRegisterModal;
+window.closeRegisterModal = closeRegisterModal;
+window.openCheckoutModal = openCheckoutModal;
+window.closeCheckoutModal = closeCheckoutModal;
+window.handleCreateUser = handleCreateUser;
+window.handleSendConfession = handleSendConfession;
+window.processFedaPayPayment = processFedaPayPayment;
+window.copyMyLink = copyMyLink;
+window.switchView = switchView;
+window.updateCounter = updateCounter;
