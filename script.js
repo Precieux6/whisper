@@ -276,7 +276,7 @@ async function registerServiceWorkerAndSubscribe() {
         }
 
         // Remplace par ta clé publique VAPID générée pour les notifications push
-        const publicVapidKey = 'TA_CLE_PUBLIQUE_VAPID_ICI';
+        const publicVapidKey = 'BP9QVbNfl-bvTRAdNRB0TudhJCrNxSPus_KucbL3thQryWi7XBGHE_2f_oacbndk_KDqGiKFGMZq_QN24sHpx4w';
         
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
