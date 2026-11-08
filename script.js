@@ -1,47 +1,25 @@
-// État initial de l'application
+// --- CONFIGURATION SUPABASE ---
+// Remplace ces valeurs par tes véritables identifiants récupérés dans ton dashboard Supabase (Settings > API)
+const SUPABASE_URL = "https://yhwgcexmwyuoezezastb.supabase.co"; 
+const SUPABASE_ANON_KEY = "sb_publishable_aYnG3MV_pacbBlHeMXBmKw_jqRjdG8F"; 
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Utilisateur par défaut (à adapter dynamiquement par la suite selon l'URL)
 let currentUser = {
-    username: "@precieux",
-    token: "whisper_token_9726"
+    id: "00000000-0000-0000-0000-000000000001", // ID UUID de test dans ta table users
+    username: "@precieux"
 };
 
-// Simulation d'une base de données locale (ou messages par défaut)
-let messages = JSON.parse(localStorage.getItem('whisper_messages')) || [
-    {
-        id: "msg_1",
-        content: "Je n'ose pas te le dire en face, mais ton sourire illumine chacune de mes journées depuis des mois...",
-        created_at: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 29).toISOString(),
-        is_paid: false,
-        hints: {
-            device: "iPhone 14 Pro (Safari)",
-            location: "Cotonou, Littoral",
-            ip: "154.120.x.x",
-            time: "Il y a 25 minutes"
-        }
-    },
-    {
-        id: "msg_2",
-        content: "Félicitations pour tous tes projets web en cours, tu assures un max ! Continue comme ça.",
-        created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 26).toISOString(),
-        is_paid: true,
-        hints: {
-            device: "Windows PC (Chrome)",
-            location: "Abomey-Calavi, Atlantique",
-            ip: "197.234.x.x",
-            time: "Il y a 2 heures"
-        }
-    }
-];
-
+let messages = [];
 let currentPaymentContext = {
-    type: 'single', // 'single' (300 FCFA) ou 'weekly' (1800 FCFA)
+    type: 'single', // 'single' (300 FCFA) ou 'weekly' (2000 FCFA)
     messageId: null
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     updateCounter(document.getElementById('messageInput'));
-    renderDashboard();
+    fetchMessages();
     
     // Configurer le lien affiché
     document.getElementById('myLinkDisplay').textContent = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
@@ -65,7 +43,7 @@ function switchView(view) {
         dashboardView.classList.remove('hidden');
         btnDashboard.classList.add('hidden');
         btnPublic.classList.remove('hidden');
-        renderDashboard();
+        fetchMessages(); // Recharger les messages depuis Supabase à l'ouverture
     } else {
         publicView.classList.remove('hidden');
         dashboardView.classList.add('hidden');
@@ -74,34 +52,56 @@ function switchView(view) {
     }
 }
 
-function handleSendConfession(e) {
+// Envoyer un message directement dans Supabase
+async function handleSendConfession(e) {
     e.preventDefault();
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
     if(!text) return;
 
-    const newMsg = {
-        id: "msg_" + Date.now(),
-        content: text,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString(),
-        is_paid: false,
-        hints: {
-            device: navigator.userAgent.includes("Mobile") ? "Smartphone (Mobile)" : "Ordinateur (Desktop)",
-            location: "Bénin (Cotonou / Calavi)",
-            ip: "197.159.x.x",
-            time: "À l'instant"
-        }
-    };
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString(); // +30 heures
 
-    messages.unshift(newMsg);
-    localStorage.setItem('whisper_messages', JSON.stringify(messages));
+    const { data, error } = await supabase
+        .from('messages')
+        .insert([
+            {
+                user_id: currentUser.id,
+                content: text,
+                device_info: navigator.userAgent.includes("Mobile") ? "Smartphone (Mobile)" : "Ordinateur (Desktop)",
+                ip_address: "197.159.x.x",
+                is_paid: false,
+                expires_at: expiresAt
+            }
+        ]);
+
+    if (error) {
+        console.error("Erreur d'insertion Supabase :", error);
+        alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+        return;
+    }
 
     input.value = '';
     updateCounter(input);
 
     alert("✨ Ton Whisper a été envoyé anonymement avec succès !");
     switchView('dashboard');
+}
+
+// Récupérer les messages depuis Supabase
+async function fetchMessages() {
+    const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Erreur de récupération Supabase :", error);
+        return;
+    }
+
+    messages = data || [];
+    renderDashboard();
 }
 
 function renderDashboard() {
@@ -118,6 +118,8 @@ function renderDashboard() {
     }
 
     container.innerHTML = messages.map(msg => {
+        const timeAgo = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
         return `
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 relative space-y-3">
                 <p class="text-sm italic text-gray-200">"${escapeHtml(msg.content)}"</p>
@@ -125,14 +127,14 @@ function renderDashboard() {
                 ${msg.is_paid ? `
                     <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs space-y-1 text-amber-300">
                         <div class="font-bold flex items-center gap-1">✨ Indices débloqués :</div>
-                        <div>📱 Appareil : ${msg.hints.device}</div>
-                        <div>📍 Zone : ${msg.hints.location}</div>
-                        <div>🌐 IP : ${msg.hints.ip}</div>
-                        <div>⏱️ Envoyé : ${msg.hints.time}</div>
+                        <div>📱 Appareil : ${msg.device_info || 'Non spécifié'}</div>
+                        <div>📍 Zone : Cotonou / Abomey-Calavi</div>
+                        <div>🌐 IP : ${msg.ip_address || 'Masquée'}</div>
+                        <div>⏱️ Reçu à : ${timeAgo}</div>
                     </div>
                 ` : `
                     <div class="flex flex-wrap justify-between items-center pt-2 border-t border-slate-900 gap-2">
-                        <span class="text-[11px] text-gray-500">${msg.hints.time} (Expire dans 30h)</span>
+                        <span class="text-[11px] text-gray-500">Reçu à ${timeAgo} (Expire dans 30h)</span>
                         <button onclick="openCheckoutModal('single', '${msg.id}')" class="bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors border border-amber-400/20">
                             Découvrir les indices (300 FCFA)
                         </button>
@@ -170,27 +172,30 @@ function closeCheckoutModal() {
     modal.classList.remove('flex');
 }
 
-function processFedaPayPayment(e) {
+// Simulation du paiement (qui sera géré par ton Webhook FedaPay en production)
+async function processFedaPayPayment(e) {
     e.preventDefault();
     const name = document.getElementById('payerName').value;
     const phone = document.getElementById('payerPhone').value;
 
     if(!name || !phone) return;
 
-    alert(`[Simulateur FedaPay / USSD Push]
-
-Une demande de paiement de ${currentPaymentContext.type === 'single' ? '300' : '1800'} FCFA a été envoyée sur le ${phone}. Veuillez valider avec votre code PIN Mobile Money.`);
+    alert(`[Simulateur FedaPay / USSD Push]\n\nUne demande de paiement de ${currentPaymentContext.type === 'single' ? '300' : '2000'} FCFA a été envoyée sur le ${phone}. Veuillez valider avec votre code PIN.`);
 
     if (currentPaymentContext.type === 'single') {
-        const msg = messages.find(m => m.id === currentPaymentContext.messageId);
-        if (msg) {
-            msg.is_paid = true;
-            localStorage.setItem('whisper_messages', JSON.stringify(messages));
+        // Mettre à jour dans Supabase que le message est payé
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_paid: true })
+            .eq('id', currentPaymentContext.messageId);
+
+        if (error) {
+            console.error("Erreur de mise à jour du paiement :", error);
         }
     }
 
     closeCheckoutModal();
-    renderDashboard();
+    fetchMessages(); // Recharger les messages actualisés depuis Supabase
     alert("🎉 Paiement validé avec succès ! Les indices sont désormais débloqués.");
 }
 
