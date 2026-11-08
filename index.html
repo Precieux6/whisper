@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whisper - Confessions & Secrets Anonymes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+    <!-- En-tête de marque -->
+    <header class="max-w-4xl mx-auto w-full flex justify-between items-center py-4 border-b border-slate-800/60 mb-6">
+        <div>
+            <h1 class="font-heading text-3xl md:text-4xl tracking-wider text-amber-400">WHISPER</h1>
+            <p class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest">Afrique Francophone</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="switchView('dashboard')" id="btnDashboard" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-semibold px-3 py-2 rounded-xl transition-colors border border-slate-700">
+                Mon Tableau de bord
+            </button>
+            <button onclick="switchView('public')" id="btnPublic" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold px-3 py-2 rounded-xl transition-colors border border-amber-500/20 hidden">
+                Simuler un Envoi
+            </button>
+        </div>
+    </header>
+
+    <!-- Conteneur Dynamique -->
+    <main class="max-w-md mx-auto w-full my-auto">
+        
+        <!-- VUE PUBLIQUE : FORMULAIRE EXPÉDITEUR -->
+        <div id="publicView" class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-md relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-gradient-to-tr from-amber-500 to-amber-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-amber-500/20 mb-3 text-slate-950">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                </div>
+                <span class="inline-block bg-amber-500/10 text-amber-400 text-[11px] px-3 py-1 rounded-full font-semibold mb-2">100% Anonyme</span>
+                <h2 class="text-xl font-bold">Envoyer un Whisper à <span id="targetUsername" class="text-amber-400">@precieux</span></h2>
+                <p class="text-xs text-gray-400 mt-1">Dis ce que tu as sur le cœur. Pas d'inscription requise.</p>
+            </div>
+
+            <form id="confessionForm" class="space-y-4" onsubmit="handleSendConfession(event)">
+                <div class="relative">
+                    <textarea 
+                        id="messageInput"
+                        rows="5" 
+                        maxlength="5000"
+                        required
+                        placeholder="Écris ton message ici en toute liberté (déclaration, secret, mot doux...)"
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:outline-none focus:border-amber-500 transition-colors resize-none text-gray-100 placeholder-gray-500"
+                        oninput="updateCounter(this)"
+                    ></textarea>
+                    <div class="flex justify-between items-center mt-1.5 px-1">
+                        <span class="text-[11px] text-gray-500">✨ Ton message est protégé</span>
+                        <span class="text-[11px] text-gray-500"><span id="charCount">0</span> / 5000</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-[11px] text-gray-400 flex items-start gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>L'expéditeur restera anonyme. Tu pourras toutefois débloquer des indices techniques (appareil, zone, heure) via FedaPay (300 FCFA).</span>
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/10 transition-all transform active:scale-98 text-sm flex items-center justify-center gap-2"
+                >
+                    <span>Envoyer anonymement</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- VUE TABLEAU DE BORD DESTINATAIRE -->
+        <div id="dashboardView" class="hidden space-y-6">
+            <!-- Carte Profil / Lien -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl relative">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Ton espace personnel</span>
+                        <h2 class="text-xl font-bold text-amber-400" id="myUsernameDisplay">@precieux</h2>
+                    </div>
+                    <button onclick="copyMyLink()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs px-3 py-1.5 rounded-xl font-semibold border border-amber-500/20 transition-colors flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        Copier mon lien
+                    </button>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-gray-400 truncate" id="myLinkDisplay">
+                    https://whisper.bj/@precieux
+                </div>
+            </div>
+
+            <!-- Boîte de Réception -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+                    <h3 class="font-bold text-sm tracking-wide">Confessions reçues</h3>
+                    <span class="bg-amber-500/10 text-amber-400 text-xs px-2.5 py-1 rounded-full font-semibold" id="messageCountBadge">0 message</span>
+                </div>
+
+                <div id="messagesContainer" class="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                    <!-- Les messages injectés dynamiquement apparaîtront ici -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modale de Paiement FedaPay -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl animate-scale-in">
+            <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white bg-slate-800 p-1.5 rounded-full transition-colors">✕</button>
+            
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl mx-auto flex items-center justify-center mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <h3 class="font-bold text-lg" id="modalTitle">Révéler les indices</h3>
+                <p class="text-xs text-gray-400 mt-1" id="modalDesc">Découvre l'appareil, la zone géographique, l'heure et l'IP de l'expéditeur.</p>
+            </div>
+            
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 mb-5 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Montant à régler</span>
+                <span class="font-bold text-amber-400 text-lg" id="modalPrice">300 FCFA</span>
+            </div>
+
+            <form onsubmit="processFedaPayPayment(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nom et Prénoms</label>
+                    <input type="text" id="payerName" required placeholder="Ex: Précieux Tossou" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Numéro Mobile Money ou Carte</label>
+                    <input type="tel" id="payerPhone" required placeholder="Ex: 97000000 / Numéro MoMo" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100">
+                </div>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-amber-500/10 mt-2">
+                    Valider via FedaPay 🚀
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <footer class="max-w-4xl mx-auto w-full text-center py-4 text-xs text-gray-500 border-t border-slate-800/60 mt-6">
+        Whisper © 2026 — Conçu pour l'Afrique Francophone avec FedaPay 🇧🇯
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
