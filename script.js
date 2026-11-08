@@ -205,7 +205,7 @@ const phone = phoneElem.value;
 
 if(!name || !phone) return;
 
-alert(`[Simulateur FedaPay / USSD Push]\n\nUne demande de paiement de ${currentPaymentContext.type === 'single' ? '300' : '2000'} FCFA a été envoyée sur le ${phone}. Veuillez valider avec votre code PIN.`);
+alert(`[Simulateur FedaPay / USSD Push]\n\nUne demande de paiement de ${currentPaymentContext.type === 'single' ? '300' : '1800'} FCFA a été envoyée sur le ${phone}. Veuillez valider avec votre code PIN.`);
 
 if (currentPaymentContext.type === 'single' && supabaseClient) {
 const { error } = await supabaseClient
