@@ -1,8 +1,10 @@
-// --- CONFIGURATION SUPABASE ---
+// --- CONFIGURATION SUPABASE SÉCURISÉE ---
 const SUPABASE_URL = "https://yhwgcexmwyuoezezastb.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_aYnG3MV_pacbBlHeMXBMKw_jqrJdG8F"; 
 
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Empêche tout conflit de double déclaration
+window.whisperDb = window.whisperDb || (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
+const supabase = window.whisperDb;
 
 // Gestion utilisateur local
 let currentUser = JSON.parse(localStorage.getItem('whisper_current_user')) || null;
@@ -258,8 +260,8 @@ function closeRegisterModal() {
     if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 }
 
-function openCheckoutModal(type, messageId) {
-    currentPaymentContext = { type, messageId };
+function openCheckoutModal(messageId) {
+    currentPaymentContext = { messageId };
     const modal = document.getElementById('checkoutModal');
     if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
 }
@@ -281,7 +283,7 @@ async function processFedaPayPayment(e) {
 
     alert(`[Simulateur FedaPay]\n\nPaiement de 300 FCFA initié sur le ${phone}.`);
 
-    if (currentPaymentContext.type === 'single' && supabase) {
+    if (currentPaymentContext.messageId && supabase) {
         await supabase.from('messages').update({ is_paid: true }).eq('id', currentPaymentContext.messageId);
     }
 
