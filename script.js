@@ -143,7 +143,8 @@ async function handleCreateUser(e) {
         .single();
 
     if (error) {
-        alert("Ce pseudo est déjà pris ou une erreur est survenue.");
+        console.error("Erreur création utilisateur (Vérifiez les politiques RLS Supabase) :", error);
+        alert("Erreur : " + (error.message || "Impossible de créer le compte. Vérifiez les règles RLS Supabase."));
         return;
     }
 
@@ -158,7 +159,7 @@ async function handleSendConfession(e) {
     e.preventDefault();
     const input = document.getElementById('messageInput');
     if (!input || !targetUser) {
-        alert("Destinataire introuvable.");
+        alert("Destinataire introuvable. Assurez-vous d'utiliser un lien de profil valide (ex: ?u=@pseudo).");
         return;
     }
 
@@ -181,8 +182,8 @@ async function handleSendConfession(e) {
         ]);
 
     if (error) {
-        console.error("Erreur d'insertion :", error);
-        alert("Erreur lors de l'envoi.");
+        console.error("Erreur d'insertion message :", error);
+        alert("Erreur lors de l'envoi du message : " + error.message);
         return;
     }
 
@@ -200,7 +201,10 @@ async function fetchMessages() {
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
 
-    if (error) return;
+    if (error) {
+        console.error("Erreur récupération messages :", error);
+        return;
+    }
 
     messages = data || [];
     renderDashboard();
@@ -283,12 +287,6 @@ async function processFedaPayPayment(e) {
 
     alert(`[Intégration FedaPay]\n\nPaiement de 300 FCFA initié pour le message ${currentPaymentContext.messageId} via ${phone}.`);
 
-    /* 
-       Rappel pour la mise en production FedaPay :
-       Ici, tu initialiseras le widget FedaPay en passant ton custom_metadata contenant { message_id: currentPaymentContext.messageId }.
-       Le webhook (webhook.js) se chargera ensuite de basculer is_paid à true de manière sécurisée côté serveur.
-    */
-
     if (currentPaymentContext.messageId && supabaseClient) {
         await supabaseClient.from('messages').update({ is_paid: true }).eq('id', currentPaymentContext.messageId);
     }
@@ -310,7 +308,7 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-// Rendre les fonctions accessibles globalement pour le HTML (onclick, oninput, etc.)
+// Exposition globale des fonctions pour le HTML
 window.openRegisterModal = openRegisterModal;
 window.closeRegisterModal = closeRegisterModal;
 window.openCheckoutModal = openCheckoutModal;
