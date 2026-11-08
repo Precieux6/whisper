@@ -1,6 +1,6 @@
 // --- CONFIGURATION SUPABASE SÉCURISÉE ---
 const SUPABASE_URL = "https://yhwgcexmwyuoezezastb.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_aYnG3MV_pacbBlHeMXBmKw_jqRjdG8F";
+const SUPABASE_ANON_KEY = "sb_publishable_aYnG3MV_pacbBlHeMXBMKw_jqRjdG8F";
 
 // Initialisation unique et sécurisée de l'instance Supabase
 window.whisperDb = window.whisperDb || (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
@@ -15,340 +15,395 @@ let previousMessageCount = null;
 let pollingInterval = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-const messageInput = document.getElementById('messageInput');
-if (messageInput) updateCounter(messageInput);
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) updateCounter(messageInput);
 
-const urlParams = new URLSearchParams(window.location.search);
-const profileUsername = urlParams.get('u');
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUsername = urlParams.get('u');
 
-if (profileUsername) {
-await loadTargetUser(profileUsername);
-} else if (currentUser) {
-setupHeaderForOwner();
-switchView('dashboard');
-} else {
-setupHeaderForGuest();
-}
+    if (profileUsername) {
+        await loadTargetUser(profileUsername);
+    } else if (currentUser) {
+        setupHeaderForOwner();
+        switchView('dashboard');
+        // Initialiser les notifications push si l'utilisateur est connecté
+        registerServiceWorkerAndSubscribe();
+    } else {
+        setupHeaderForGuest();
+    }
 });
 
 async function loadTargetUser(username) {
-if (!supabaseClient) return;
-const cleanUsername = username.startsWith('@') ? username : '@' + username;
+    if (!supabaseClient) return;
+    const cleanUsername = username.startsWith('@') ? username : '@' + username;
 
-const { data, error } = await supabaseClient
-.from('users')
-.select('*')
-.eq('username', cleanUsername)
-.single();
+    const { data, error } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('username', cleanUsername)
+        .single();
 
-if (error || !data) {
-alert("Ce lien Whisper n'existe pas ou a expiré.");
-return;
-}
+    if (error || !data) {
+        alert("Ce lien Whisper n'existe pas ou a expiré.");
+        return;
+    }
 
-targetUser = data;
-const targetElem = document.getElementById('targetUsername');
-if (targetElem) targetElem.textContent = targetUser.username;
+    targetUser = data;
+    const targetElem = document.getElementById('targetUsername');
+    if (targetElem) targetElem.textContent = targetUser.username;
 
-const headerActions = document.getElementById('headerActions');
-if (headerActions) {
-headerActions.innerHTML = `
-<button onclick="openRegisterModal()" class="bg-amber-500/10 text-amber-400 text-xs font-semibold px-3 py-2 rounded-xl border border-amber-500/20">
-Créer mon lien
-</button>
-`;
-}
+    const headerActions = document.getElementById('headerActions');
+    if (headerActions) {
+        headerActions.innerHTML = `
+            <button onclick="openRegisterModal()" class="bg-amber-500/10 text-amber-400 text-xs font-semibold px-3 py-2 rounded-xl border border-amber-500/20">
+                Créer mon lien
+            </button>
+        `;
+    }
 }
 
 function setupHeaderForOwner() {
-if (!currentUser) return;
-const headerActions = document.getElementById('headerActions');
-if (headerActions) {
-headerActions.innerHTML = `
-<button onclick="switchView('dashboard')" id="btnDashboard" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700">
-Mon Tableau de bord
-</button>
-<button onclick="switchView('public')" id="btnPublic" class="bg-amber-500/10 text-amber-400 text-xs font-semibold px-3 py-2 rounded-xl border border-amber-500/20 hidden">
-Envoyer un message
-</button>
-`;
-}
-const userDisplay = document.getElementById('myUsernameDisplay');
-const linkDisplay = document.getElementById('myLinkDisplay');
-if (userDisplay) userDisplay.textContent = currentUser.username;
-if (linkDisplay) linkDisplay.textContent = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
+    if (!currentUser) return;
+    const headerActions = document.getElementById('headerActions');
+    if (headerActions) {
+        headerActions.innerHTML = `
+            <button onclick="switchView('dashboard')" id="btnDashboard" class="bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700">
+                Mon Tableau de bord
+            </button>
+            <button onclick="switchView('public')" id="btnPublic" class="bg-amber-500/10 text-amber-400 text-xs font-semibold px-3 py-2 rounded-xl border border-amber-500/20 hidden">
+                Envoyer un message
+            </button>
+        `;
+    }
+    const userDisplay = document.getElementById('myUsernameDisplay');
+    const linkDisplay = document.getElementById('myLinkDisplay');
+    if (userDisplay) userDisplay.textContent = currentUser.username;
+    if (linkDisplay) linkDisplay.textContent = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
 }
 
 function setupHeaderForGuest() {
-const headerActions = document.getElementById('headerActions');
-if (headerActions) {
-headerActions.innerHTML = `
-<button onclick="openRegisterModal()" class="bg-amber-500 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg">
-Créer mon lien Whisper
-</button>
-`;
-}
+    const headerActions = document.getElementById('headerActions');
+    if (headerActions) {
+        headerActions.innerHTML = `
+            <button onclick="openRegisterModal()" class="bg-amber-500 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg">
+                Créer mon lien Whisper
+            </button>
+        `;
+    }
 }
 
 function updateCounter(textarea) {
-const count = textarea.value.length;
-const counterElem = document.getElementById('charCount');
-if (counterElem) counterElem.textContent = count;
+    const count = textarea.value.length;
+    const counterElem = document.getElementById('charCount');
+    if (counterElem) counterElem.textContent = count;
 }
 
 function switchView(view) {
-const publicView = document.getElementById('publicView');
-const dashboardView = document.getElementById('dashboardView');
-const successView = document.getElementById('successView');
-const btnDashboard = document.getElementById('btnDashboard');
-const btnPublic = document.getElementById('btnPublic');
+    const publicView = document.getElementById('publicView');
+    const dashboardView = document.getElementById('dashboardView');
+    const successView = document.getElementById('successView');
+    const btnDashboard = document.getElementById('btnDashboard');
+    const btnPublic = document.getElementById('btnPublic');
 
-if (!publicView || !dashboardView) return;
+    if (!publicView || !dashboardView) return;
 
-publicView.classList.add('hidden');
-dashboardView.classList.add('hidden');
-if (successView) successView.classList.add('hidden');
+    publicView.classList.add('hidden');
+    dashboardView.classList.add('hidden');
+    if (successView) successView.classList.add('hidden');
 
-// Gérer l'intervalle de rafraîchissement (Polling)
-if (view === 'dashboard') {
-dashboardView.classList.remove('hidden');
-if (btnDashboard) btnDashboard.classList.add('hidden');
-if (btnPublic) btnPublic.classList.remove('hidden');
-fetchMessages();
+    // Gérer l'intervalle de rafraîchissement (Polling)
+    if (view === 'dashboard') {
+        dashboardView.classList.remove('hidden');
+        if (btnDashboard) btnDashboard.classList.add('hidden');
+        if (btnPublic) btnPublic.classList.remove('hidden');
+        fetchMessages();
 
-// Activer le polling toutes les 10 secondes si l'utilisateur est sur son tableau de bord
-if (!pollingInterval) {
-pollingInterval = setInterval(fetchMessages, 10000);
-}
-} else {
-// Couper le polling si on quitte le dashboard
-if (pollingInterval) {
-clearInterval(pollingInterval);
-pollingInterval = null;
-}
+        // Activer le polling toutes les 10 secondes si l'utilisateur est sur son tableau de bord
+        if (!pollingInterval) {
+            pollingInterval = setInterval(fetchMessages, 10000);
+        }
+    } else {
+        // Couper le polling si on quitte le dashboard
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
 
-if (view === 'success') {
-if (successView) successView.classList.remove('hidden');
-} else {
-publicView.classList.remove('hidden');
-if (btnDashboard) btnDashboard.classList.remove('hidden');
-if (btnPublic) btnPublic.classList.add('hidden');
-}
-}
+        if (view === 'success') {
+            if (successView) successView.classList.remove('hidden');
+        } else {
+            publicView.classList.remove('hidden');
+            if (btnDashboard) btnDashboard.classList.remove('hidden');
+            if (btnPublic) btnPublic.classList.add('hidden');
+        }
+    }
 }
 
 async function handleCreateUser(e) {
-e.preventDefault();
-const input = document.getElementById('newUsernameInput');
-if (!input) return;
-let username = input.value.trim().toLowerCase();
-if (!username) return;
+    e.preventDefault();
+    const input = document.getElementById('newUsernameInput');
+    if (!input) return;
+    let username = input.value.trim().toLowerCase();
+    if (!username) return;
 
-if (!username.startsWith('@')) username = '@' + username;
-const secretToken = "token_" + Math.random().toString(36).substring(2);
+    if (!username.startsWith('@')) username = '@' + username;
+    const secretToken = "token_" + Math.random().toString(36).substring(2);
 
-if (!supabaseClient) {
-alert("Erreur de connexion à Supabase.");
-return;
-}
+    if (!supabaseClient) {
+        alert("Erreur de connexion à Supabase.");
+        return;
+    }
 
-const { data, error } = await supabaseClient
-.from('users')
-.insert([{ username: username, secret_token: secretToken }])
-.select()
-.single();
+    const { data, error } = await supabaseClient
+        .from('users')
+        .insert([{ username: username, secret_token: secretToken }])
+        .select()
+        .single();
 
-if (error) {
-console.error("Erreur création utilisateur :", error);
-alert("Erreur : " + (error.message || "Ce pseudo est déjà pris."));
-return;
-}
+    if (error) {
+        console.error("Erreur création utilisateur :", error);
+        alert("Erreur : " + (error.message || "Ce pseudo est déjà pris."));
+        return;
+    }
 
-currentUser = data;
-localStorage.setItem('whisper_current_user', JSON.stringify(currentUser));
-closeRegisterModal();
+    currentUser = data;
+    localStorage.setItem('whisper_current_user', JSON.stringify(currentUser));
+    closeRegisterModal();
 
-window.location.href = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
+    // Demander l'activation des notifications push à la création
+    registerServiceWorkerAndSubscribe();
+
+    window.location.href = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
 }
 
 async function handleSendConfession(e) {
-e.preventDefault();
-const input = document.getElementById('messageInput');
-if (!input || !targetUser) {
-alert("Destinataire introuvable.");
-return;
-}
+    e.preventDefault();
+    const input = document.getElementById('messageInput');
+    if (!input || !targetUser) {
+        alert("Destinataire introuvable.");
+        return;
+    }
 
-const text = input.value.trim();
-if(!text) return;
+    const text = input.value.trim();
+    if(!text) return;
 
-const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString();
 
-const { error } = await supabaseClient
-.from('messages')
-.insert([
-{
-user_id: targetUser.id,
-content: text,
-device_info: navigator.userAgent.includes("Mobile") ? "Smartphone (Mobile)" : "Ordinateur (Desktop)",
-ip_address: "197.159.x.x",
-is_paid: false,
-expires_at: expiresAt
-}
-]);
+    const { error } = await supabaseClient
+        .from('messages')
+        .insert([
+            {
+                user_id: targetUser.id,
+                content: text,
+                device_info: navigator.userAgent.includes("Mobile") ? "Smartphone (Mobile)" : "Ordinateur (Desktop)",
+                ip_address: "197.159.x.x",
+                is_paid: false,
+                expires_at: expiresAt
+            }
+        ]);
 
-if (error) {
-console.error("Erreur d'insertion message :", error);
-alert("Erreur lors de l'envoi du message : " + error.message);
-return;
-}
+    if (error) {
+        console.error("Erreur d'insertion message :", error);
+        alert("Erreur lors de l'envoi du message : " + error.message);
+        return;
+    }
 
-input.value = '';
-updateCounter(input);
-switchView('success');
+    input.value = '';
+    updateCounter(input);
+    switchView('success');
 }
 
 async function fetchMessages() {
-if (!supabaseClient || !currentUser) return;
+    if (!supabaseClient || !currentUser) return;
 
-const { data, error } = await supabaseClient
-.from('messages')
-.select('*')
-.eq('user_id', currentUser.id)
-.order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient
+        .from('messages')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
 
-if (error) return;
+    if (error) return;
 
-const newMessages = data || [];
+    const newMessages = data || [];
 
-// Option A : Détection d'un nouveau message pour déclencher l'alerte sonore et visuelle
-if (previousMessageCount !== null && newMessages.length > previousMessageCount) {
-playNotificationSound();
-}
-previousMessageCount = newMessages.length;
+    // Option A : Détection d'un nouveau message pour déclencher l'alerte sonore et visuelle
+    if (previousMessageCount !== null && newMessages.length > previousMessageCount) {
+        playNotificationSound();
+    }
+    previousMessageCount = newMessages.length;
 
-messages = newMessages;
-renderDashboard();
+    messages = newMessages;
+    renderDashboard();
 }
 
 // Générateur de son de notification natif (sans fichier externe)
 function playNotificationSound() {
-try {
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const oscillator = audioCtx.createOscillator();
-const gainNode = audioCtx.createGain();
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
 
-oscillator.type = 'sine';
-oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Note Ré5
-gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Note Ré5
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
 
-oscillator.connect(gainNode);
-gainNode.connect(audioCtx.destination);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
 
-oscillator.start();
-oscillator.stop(audioCtx.currentTime + 0.5);
-} catch (e) {
-console.log("Audio non pris en charge ou bloqué par le navigateur.");
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {
+        console.log("Audio non pris en charge ou bloqué par le navigateur.");
+    }
 }
+
+// --- INTÉGRATION WEB PUSH NOTIFICATIONS ---
+async function registerServiceWorkerAndSubscribe() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log("Les notifications Push ne sont pas prises en charge par ce navigateur.");
+        return;
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('Service Worker enregistré avec succès :', registration);
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            console.log('Permission de notification refusée.');
+            return;
+        }
+
+        // Remplace par ta clé publique VAPID générée pour les notifications push
+        const publicVapidKey = 'TA_CLE_PUBLIQUE_VAPID_ICI';
+        
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+
+        if (currentUser && supabaseClient) {
+            await supabaseClient
+                .from('users')
+                .update({ push_subscription: subscription })
+                .eq('id', currentUser.id);
+            console.log('Abonnement push sauvegardé dans Supabase.');
+        }
+
+    } catch (error) {
+        console.error('Erreur lors de l’enregistrement Push :', error);
+    }
 }
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+// ------------------------------------------
 
 function renderDashboard() {
-const container = document.getElementById('messagesContainer');
-const badge = document.getElementById('messageCountBadge');
-if (!container) return;
+    const container = document.getElementById('messagesContainer');
+    const badge = document.getElementById('messageCountBadge');
+    if (!container) return;
 
-if (badge) badge.textContent = `${messages.length} message${messages.length > 1 ? 's' : ''}`;
+    if (badge) badge.textContent = `${messages.length} message${messages.length > 1 ? 's' : ''}`;
 
-if (messages.length === 0) {
-container.innerHTML = `
-<div class="text-center py-8 text-gray-500 text-xs">
-Aucun message pour le moment. Partage ton lien en story pour recevoir des confessions !
-</div>
-`;
-return;
-}
+    if (messages.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-gray-500 text-xs">
+                Aucun message pour le moment. Partage ton lien en story pour recevoir des confessions !
+            </div>
+        `;
+        return;
+    }
 
-container.innerHTML = messages.map(msg => {
-const timeAgo = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    container.innerHTML = messages.map(msg => {
+        const timeAgo = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-return `
-<div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 relative space-y-3">
-<p class="text-sm italic text-gray-200">"${escapeHtml(msg.content)}"</p>
+        return `
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 relative space-y-3">
+                <p class="text-sm italic text-gray-200">"${escapeHtml(msg.content)}"</p>
 
-${msg.is_paid ? `
-<div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs space-y-1 text-amber-300">
-<div class="font-bold flex items-center gap-1">✨ Indices débloqués :</div>
-<div>📱 Appareil : ${msg.device_info || 'Non spécifié'}</div>
-<div>📍 Zone : Cotonou / Abomey-Calavi</div>
-<div>🌐 IP : ${msg.ip_address || 'Masquée'}</div>
-<div>⏱️ Reçu à : ${timeAgo}</div>
-</div>
-` : `
-<div class="flex flex-wrap justify-between items-center pt-2 border-t border-slate-900 gap-2">
-<span class="text-[11px] text-gray-500">Reçu à ${timeAgo} (Expire dans 30h)</span>
-<button onclick="openCheckoutModal('${msg.id}')" class="bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors border border-amber-400/20">
-Découvrir les indices (300 FCFA)
-</button>
-</div>
-`}
-</div>
-`;
-}).join('');
+                ${msg.is_paid ? `
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs space-y-1 text-amber-300">
+                        <div class="font-bold flex items-center gap-1">✨ Indices débloqués :</div>
+                        <div>📱 Appareil : ${msg.device_info || 'Non spécifié'}</div>
+                        <div>📍 Zone : Cotonou / Abomey-Calavi</div>
+                        <div>🌐 IP : ${msg.ip_address || 'Masquée'}</div>
+                        <div>⏱️ Reçu à : ${timeAgo}</div>
+                    </div>
+                ` : `
+                    <div class="flex flex-wrap justify-between items-center pt-2 border-t border-slate-900 gap-2">
+                        <span class="text-[11px] text-gray-500">Reçu à ${timeAgo} (Expire dans 30h)</span>
+                        <button onclick="openCheckoutModal('${msg.id}')" class="bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors border border-amber-400/20">
+                            Découvrir les indices (300 FCFA)
+                        </button>
+                    </div>
+                `}
+            </div>
+        `;
+    }).join('');
 }
 
 function openRegisterModal() {
-const modal = document.getElementById('registerModal');
-if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    const modal = document.getElementById('registerModal');
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
 }
 
 function closeRegisterModal() {
-const modal = document.getElementById('registerModal');
-if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    const modal = document.getElementById('registerModal');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 }
 
 function openCheckoutModal(messageId) {
-currentPaymentContext = { messageId };
-const modal = document.getElementById('checkoutModal');
-if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    currentPaymentContext = { messageId };
+    const modal = document.getElementById('checkoutModal');
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
 }
 
 function closeCheckoutModal() {
-const modal = document.getElementById('checkoutModal');
-if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    const modal = document.getElementById('checkoutModal');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 }
 
 async function processFedaPayPayment(e) {
-e.preventDefault();
-const nameElem = document.getElementById('payerName');
-const phoneElem = document.getElementById('payerPhone');
-if (!nameElem || !phoneElem) return;
+    e.preventDefault();
+    const nameElem = document.getElementById('payerName');
+    const phoneElem = document.getElementById('payerPhone');
+    if (!nameElem || !phoneElem) return;
 
-const name = nameElem.value;
-const phone = phoneElem.value;
-if(!name || !phone) return;
+    const name = nameElem.value;
+    const phone = phoneElem.value;
+    if(!name || !phone) return;
 
-alert(`[Intégration FedaPay]\n\nPaiement de 300 FCFA initié pour le message ${currentPaymentContext.messageId} via ${phone}.`);
+    alert(`[Intégration FedaPay]\n\nPaiement de 300 FCFA initié pour le message ${currentPaymentContext.messageId} via ${phone}.`);
 
-if (currentPaymentContext.messageId && supabaseClient) {
-await supabaseClient.from('messages').update({ is_paid: true }).eq('id', currentPaymentContext.messageId);
-}
+    if (currentPaymentContext.messageId && supabaseClient) {
+        await supabaseClient.from('messages').update({ is_paid: true }).eq('id', currentPaymentContext.messageId);
+    }
 
-closeCheckoutModal();
-fetchMessages();
-alert("🎉 Paiement validé ! Indices débloqués.");
+    closeCheckoutModal();
+    fetchMessages();
+    alert("🎉 Paiement validé ! Indices débloqués.");
 }
 
 function copyMyLink() {
-if (!currentUser) return;
-const link = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
-navigator.clipboard.writeText(link);
-alert("📋 Lien copié ! Partage-le en story.");
+    if (!currentUser) return;
+    const link = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
+    navigator.clipboard.writeText(link);
+    alert("📋 Lien copié ! Partage-le en story.");
 }
 
 function escapeHtml(text) {
-const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
 // Exposition globale des fonctions pour le HTML
