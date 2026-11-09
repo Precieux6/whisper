@@ -1,6 +1,6 @@
 // --- CONFIGURATION SUPABASE SÉCURISÉE ---
 const SUPABASE_URL = "https://yhwgcexmwyuoezezastb.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_aYnG3MV_pacbBlHeMXBMKw_jqRjdG8F";
+const SUPABASE_ANON_KEY = "sb_publishable_aYnG3MV_pacbBlHeMXBmKw_jqRjdG8F";
 
 // Initialisation unique et sécurisée de l'instance Supabase
 window.whisperDb = window.whisperDb || (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null);
