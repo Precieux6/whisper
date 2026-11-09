@@ -139,111 +139,110 @@
 
     </main>
 
-    <!-- Modale de Création de Compte / Pseudo -->
-    <div id="registerModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl">
-            <button onclick="closeRegisterModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white bg-slate-800 p-1.5 rounded-full">✕</button>
+    <!-- Modale de Création de Compte (Thème Clair Rose/Blanc) -->
+    <div id="registerModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-rose-100 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl text-slate-800">
+            <button onclick="closeRegisterModal()" class="absolute top-4 right-4 text-gray-400 hover:text-slate-700 bg-rose-50 p-1.5 rounded-full">✕</button>
             <div class="text-center mb-4">
-                <h3 class="font-bold text-lg text-amber-400">Crée ton lien Whisper</h3>
-                <p class="text-xs text-gray-400 mt-1">Choisis ton pseudo unique pour recevoir des secrets.</p>
+                <h3 class="font-bold text-lg text-emerald-700">Crée ton lien Whisper</h3>
+                <p class="text-xs text-gray-500 mt-1">Choisis ton pseudo unique pour recevoir des secrets.</p>
             </div>
             <form onsubmit="handleCreateUser(event)" class="space-y-3">
-                <input type="text" id="newUsernameInput" required placeholder="Ex: mon_pseudo" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-gray-100 focus:border-amber-500 focus:outline-none">
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all shadow-lg">
+                <input type="text" id="newUsernameInput" required placeholder="Ex: mon_pseudo" class="w-full bg-rose-50/30 border border-rose-200 rounded-xl p-3 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none placeholder-gray-400">
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20">
                     Générer mon lien 🚀
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Modale de Paiement Avancée (Offres & Multi-moyens) -->
-    <div id="checkoutModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 relative shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
-            <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white bg-slate-800 p-1.5 rounded-full transition-colors">✕</button>
+    <!-- Modale de Paiement Avancée (Thème Clair Rose/Blanc & Rouge au vin) -->
+    <div id="checkoutModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white border border-rose-100 rounded-3xl max-w-md w-full p-6 relative shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto text-slate-800">
+            <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-gray-400 hover:text-slate-700 bg-rose-50 p-1.5 rounded-full transition-colors">✕</button>
             
             <div class="text-center mb-5">
-                <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl mx-auto flex items-center justify-center mb-2">
+                <div class="w-12 h-12 bg-rose-100 text-rose-700 rounded-2xl mx-auto flex items-center justify-center mb-2 shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
-                <h3 class="font-bold text-lg" id="modalTitle">Choisir une offre & débloquer</h3>
-                <p class="text-xs text-gray-400 mt-1">Sélectionnez votre formule et votre moyen de paiement sécurisé.</p>
+                <h3 class="font-bold text-lg text-slate-900" id="modalTitle">Choisir une offre & débloquer</h3>
+                <p class="text-xs text-gray-500 mt-1">Sélectionnez votre formule et votre moyen de paiement sécurisé.</p>
             </div>
 
             <form onsubmit="processAdvancedPayment(event)" class="space-y-4">
                 <!-- Choix de l'offre -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1.5 font-semibold">1. Choisir l'offre</label>
+                    <label class="block text-xs text-gray-600 mb-1.5 font-semibold">1. Choisir l'offre</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="cursor-pointer border border-amber-500/40 bg-amber-500/10 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-amber-500 select-none">
+                        <label class="cursor-pointer border border-emerald-500 bg-emerald-50/60 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-emerald-600 select-none">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-bold text-rose-400">Journalière</span>
-                                <input type="radio" name="pricingPlan" value="300" checked onchange="updatePaymentPlan(300, '300 FCFA')" class="accent-rose-500">
+                                <span class="text-xs font-bold text-emerald-700">Journalière</span>
+                                <input type="radio" name="pricingPlan" value="300" checked onchange="updatePaymentPlan(300, '300 FCFA')" class="accent-emerald-600">
                             </div>
-                            <span class="text-sm font-extrabold text-white">300 FCFA</span>
-                            <span class="text-[10px] text-gray-400 mt-1">Indices & accès instantanés</span>
+                            <span class="text-sm font-extrabold text-slate-900">300 FCFA</span>
+                            <span class="text-[10px] text-gray-500 mt-1">Indices & accès instantanés</span>
                         </label>
-                        <label class="cursor-pointer border border-rose-800/60 bg-rose-950/20 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-amber-500/50 select-none">
+                        <label class="cursor-pointer border border-rose-300 bg-rose-50/40 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-rose-500 select-none">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-bold text-rose-400">Hebdomadaire</span>
-                                <input type="radio" name="pricingPlan" value="1800" onchange="updatePaymentPlan(1800, '1800 FCFA')" class="accent-rose-500">
+                                <span class="text-xs font-bold text-rose-800">Hebdomadaire</span>
+                                <input type="radio" name="pricingPlan" value="1800" onchange="updatePaymentPlan(1800, '1800 FCFA')" class="accent-rose-700">
                             </div>
-                            <span class="text-sm font-extrabold text-white">1800 FCFA</span>
-                            <span class="text-[10px] text-gray-400 mt-1">Pass 7 jours prolongé</span>
+                            <span class="text-sm font-extrabold text-slate-900">1800 FCFA</span>
+                            <span class="text-[10px] text-gray-500 mt-1">Pass 7 jours prolongé</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- Choix du mode de paiement -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1.5 font-semibold">2. Moyen de paiement</label>
+                    <label class="block text-xs text-gray-600 mb-1.5 font-semibold">2. Moyen de paiement</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <button type="button" id="btnMethodMoMo" onclick="setPaymentMethod('momo')" class="py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                        <button type="button" id="btnMethodMoMo" onclick="setPaymentMethod('momo')" class="py-2.5 px-3 rounded-xl border border-emerald-500 bg-emerald-50 text-emerald-700 text-xs font-bold flex items-center justify-center gap-2 transition-all">
                             📱 Mobile Money
                         </button>
-                        <button type="button" id="btnMethodCard" onclick="setPaymentMethod('card')" class="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950 text-gray-400 text-xs font-bold flex items-center justify-center gap-2 transition-all hover:text-white">
+                        <button type="button" id="btnMethodCard" onclick="setPaymentMethod('card')" class="py-2.5 px-3 rounded-xl border border-rose-200 bg-rose-50/30 text-gray-600 text-xs font-bold flex items-center justify-center gap-2 transition-all hover:text-slate-900">
                             💳 Carte Bancaire
                         </button>
                     </div>
                 </div>
 
-                <!-- Informations payeur (Neutres) -->
+                <!-- Informations payeur -->
                 <div class="space-y-3 pt-1">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Nom et Prénoms</label>
-                        <input type="text" id="payerName" required placeholder="Votre nom complet" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100 placeholder-gray-600">
+                        <label class="block text-xs text-gray-600 mb-1">Nom et Prénoms</label>
+                        <input type="text" id="payerName" required placeholder="Votre nom complet" class="w-full bg-rose-50/30 border border-rose-200 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500 text-slate-800 placeholder-gray-400">
                     </div>
 
-                    <!-- Champs dynamiques selon le mode -->
                     <div id="momoFields">
-                        <label class="block text-xs text-gray-400 mb-1">Numéro Mobile Money (MTN / Moov / Celtis)</label>
-                        <input type="tel" id="payerPhone" placeholder="Ex: 97000000" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100 placeholder-gray-600">
+                        <label class="block text-xs text-gray-600 mb-1">Numéro Mobile Money (MTN / Moov / Celtis)</label>
+                        <input type="tel" id="payerPhone" placeholder="Ex: 97000000" class="w-full bg-rose-50/30 border border-rose-200 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500 text-slate-800 placeholder-gray-400">
                     </div>
 
-                    <div id="cardFields" class="hidden space-y-3 p-3 bg-slate-950 rounded-2xl border border-slate-800">
+                    <div id="cardFields" class="hidden space-y-3 p-3 bg-rose-50/30 rounded-2xl border border-rose-200">
                         <div>
-                            <label class="block text-[11px] text-gray-400 mb-1">Numéro de carte</label>
-                            <input type="text" id="cardNumber" placeholder="4532 •••• •••• ••••" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-gray-100 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                            <label class="block text-[11px] text-gray-600 mb-1">Numéro de carte</label>
+                            <input type="text" id="cardNumber" placeholder="4532 •••• •••• ••••" class="w-full bg-white border border-rose-200 rounded-xl p-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none placeholder-gray-400">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-[11px] text-gray-400 mb-1">Expiration</label>
-                                <input type="text" id="cardExpiry" placeholder="MM/AA" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-gray-100 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                                <label class="block text-[11px] text-gray-600 mb-1">Expiration</label>
+                                <input type="text" id="cardExpiry" placeholder="MM/AA" class="w-full bg-white border border-rose-200 rounded-xl p-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none placeholder-gray-400">
                             </div>
                             <div>
-                                <label class="block text-[11px] text-gray-400 mb-1">CVC / CVV</label>
-                                <input type="password" id="cardCvc" placeholder="123" maxlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-gray-100 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                                <label class="block text-[11px] text-gray-600 mb-1">CVC / CVV</label>
+                                <input type="password" id="cardCvc" placeholder="123" maxlength="4" class="w-full bg-white border border-rose-200 rounded-xl p-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none placeholder-gray-400">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Récapitulatif & Bouton de validation -->
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                    <span class="text-gray-400">Montant total :</span>
-                    <span class="font-bold text-amber-400 text-base" id="displayTotalAmount">300 FCFA</span>
+                <div class="bg-rose-50/50 p-3 rounded-xl border border-rose-200 flex justify-between items-center text-xs">
+                    <span class="text-gray-600">Montant total :</span>
+                    <span class="font-bold text-emerald-600 text-base" id="displayTotalAmount">300 FCFA</span>
                 </div>
 
-                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-amber-500/10">
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20">
                     Procéder au paiement sécurisé via FedaPay 🚀
                 </button>
             </form>
