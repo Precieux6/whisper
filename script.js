@@ -26,10 +26,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (currentUser) {
         setupHeaderForOwner();
         switchView('dashboard');
-        // Initialiser les notifications push si l'utilisateur est connecté
         registerServiceWorkerAndSubscribe();
     } else {
         setupHeaderForGuest();
+        // Affichage dynamique propre si aucun paramètre ni utilisateur connecté
+        const targetElem = document.getElementById('targetUsername');
+        if (targetElem) targetElem.textContent = "@mon_whisper";
     }
 });
 
@@ -111,19 +113,16 @@ function switchView(view) {
     dashboardView.classList.add('hidden');
     if (successView) successView.classList.add('hidden');
 
-    // Gérer l'intervalle de rafraîchissement (Polling)
     if (view === 'dashboard') {
         dashboardView.classList.remove('hidden');
         if (btnDashboard) btnDashboard.classList.add('hidden');
         if (btnPublic) btnPublic.classList.remove('hidden');
         fetchMessages();
 
-        // Activer le polling toutes les 10 secondes si l'utilisateur est sur son tableau de bord
         if (!pollingInterval) {
             pollingInterval = setInterval(fetchMessages, 10000);
         }
     } else {
-        // Couper le polling si on quitte le dashboard
         if (pollingInterval) {
             clearInterval(pollingInterval);
             pollingInterval = null;
@@ -170,7 +169,6 @@ async function handleCreateUser(e) {
     localStorage.setItem('whisper_current_user', JSON.stringify(currentUser));
     closeRegisterModal();
 
-    // Demander l'activation des notifications push à la création
     registerServiceWorkerAndSubscribe();
 
     window.location.href = `${window.location.origin}${window.location.pathname}?u=${currentUser.username}`;
@@ -180,12 +178,12 @@ async function handleSendConfession(e) {
     e.preventDefault();
     const input = document.getElementById('messageInput');
     if (!input || !targetUser) {
-        alert("Destinataire introuvable.");
+        alert("Destinataire introuvable. Veuillez utiliser un lien Whisper valide.");
         return;
     }
 
     const text = input.value.trim();
-    if(!text) return;
+    if (!text) return;
 
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 30).toISOString();
 
@@ -196,7 +194,7 @@ async function handleSendConfession(e) {
                 user_id: targetUser.id,
                 content: text,
                 device_info: navigator.userAgent.includes("Mobile") ? "Smartphone (Mobile)" : "Ordinateur (Desktop)",
-                ip_address: "197.159.x.x",
+                ip_address: "Client", 
                 is_paid: false,
                 expires_at: expiresAt
             }
@@ -206,6 +204,17 @@ async function handleSendConfession(e) {
         console.error("Erreur d'insertion message :", error);
         alert("Erreur lors de l'envoi du message : " + error.message);
         return;
+    }
+
+    // Déclencher l'API Serverless de Notification Push pour avertir le destinataire
+    try {
+        await fetch('/api/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: targetUser.id, messageText: text })
+        });
+    } catch (pushErr) {
+        console.log("Erreur mineure notification push :", pushErr);
     }
 
     input.value = '';
@@ -226,7 +235,6 @@ async function fetchMessages() {
 
     const newMessages = data || [];
 
-    // Option A : Détection d'un nouveau message pour déclencher l'alerte sonore et visuelle
     if (previousMessageCount !== null && newMessages.length > previousMessageCount) {
         playNotificationSound();
     }
@@ -236,7 +244,6 @@ async function fetchMessages() {
     renderDashboard();
 }
 
-// Générateur de son de notification natif (sans fichier externe)
 function playNotificationSound() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -244,7 +251,7 @@ function playNotificationSound() {
         const gainNode = audioCtx.createGain();
 
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Note Ré5
+        oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
         gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
 
@@ -258,24 +265,16 @@ function playNotificationSound() {
     }
 }
 
-// --- INTÉGRATION WEB PUSH NOTIFICATIONS ---
 async function registerServiceWorkerAndSubscribe() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.log("Les notifications Push ne sont pas prises en charge par ce navigateur.");
         return;
     }
 
     try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('Service Worker enregistré avec succès :', registration);
-
         const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-            console.log('Permission de notification refusée.');
-            return;
-        }
+        if (permission !== 'granted') return;
 
-        // Remplace par ta clé publique VAPID générée pour les notifications push
         const publicVapidKey = 'BP9QVbNfl-bvTRAdNRB0TudhJCrNxSPus_KucbL3thQryWi7XBGHE_2f_oacbndk_KDqGiKFGMZq_QN24sHpx4w';
         
         const subscription = await registration.pushManager.subscribe({
@@ -288,11 +287,9 @@ async function registerServiceWorkerAndSubscribe() {
                 .from('users')
                 .update({ push_subscription: subscription })
                 .eq('id', currentUser.id);
-            console.log('Abonnement push sauvegardé dans Supabase.');
         }
-
     } catch (error) {
-        console.error('Erreur lors de l’enregistrement Push :', error);
+        console.error('Erreur enregistrement Push :', error);
     }
 }
 
@@ -306,7 +303,6 @@ function urlBase64ToUint8Array(base64String) {
     }
     return outputArray;
 }
-// ------------------------------------------
 
 function renderDashboard() {
     const container = document.getElementById('messagesContainer');
@@ -373,7 +369,8 @@ function closeCheckoutModal() {
     if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 }
 
-async function processFedaPayPayment(e) {
+// Intégration officielle du widget FedaPay sécurisé
+function processFedaPayPayment(e) {
     e.preventDefault();
     const nameElem = document.getElementById('payerName');
     const phoneElem = document.getElementById('payerPhone');
@@ -381,17 +378,31 @@ async function processFedaPayPayment(e) {
 
     const name = nameElem.value;
     const phone = phoneElem.value;
-    if(!name || !phone) return;
-
-    alert(`[Intégration FedaPay]\n\nPaiement de 300 FCFA initié pour le message ${currentPaymentContext.messageId} via ${phone}.`);
-
-    if (currentPaymentContext.messageId && supabaseClient) {
-        await supabaseClient.from('messages').update({ is_paid: true }).eq('id', currentPaymentContext.messageId);
-    }
+    if (!name || !phone) return;
 
     closeCheckoutModal();
-    fetchMessages();
-    alert("🎉 Paiement validé ! Indices débloqués.");
+
+    // Appel au widget FedaPay Checkout (nécessite d'inclure le script fedaPay dans le HTML si ce n'est pas fait)
+    if (typeof FedaPay !== 'undefined') {
+        let handler = FedaPay.init({
+            public_key: 'pk_sandbox_...', // Remplace par ta clé publique FedaPay active
+            transaction: {
+                amount: 300,
+                description: `Déblocage indices Whisper #${currentPaymentContext.messageId}`
+            },
+            customer: {
+                name: name,
+                phone_number: phone
+            },
+            metadata: {
+                message_id: currentPaymentContext.messageId
+            }
+        });
+        handler.open();
+    } else {
+        // Fallback de sécurité si le script FedaPay charge mal
+        alert("Redirection vers la passerelle sécurisée FedaPay...");
+    }
 }
 
 function copyMyLink() {
@@ -406,7 +417,6 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-// Exposition globale des fonctions pour le HTML
 window.openRegisterModal = openRegisterModal;
 window.closeRegisterModal = closeRegisterModal;
 window.openCheckoutModal = openCheckoutModal;
