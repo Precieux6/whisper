@@ -324,11 +324,11 @@ function renderDashboard() {
         const timeAgo = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         return `
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 relative space-y-3">
-                <p class="text-sm italic text-gray-200">"${escapeHtml(msg.content)}"</p>
+            <div class="bg-rose-50/40 p-4 rounded-2xl border border-rose-200 relative space-y-3 shadow-sm">
+                <p class="text-sm italic text-slate-900 font-medium">"${escapeHtml(msg.content)}"</p>
 
                 ${msg.is_paid ? `
-                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs space-y-1 text-amber-300">
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs space-y-1 text-emerald-800">
                         <div class="font-bold flex items-center gap-1">✨ Indices débloqués :</div>
                         <div>📱 Appareil : ${msg.device_info || 'Non spécifié'}</div>
                         <div>📍 Zone : Cotonou / Abomey-Calavi</div>
@@ -336,10 +336,10 @@ function renderDashboard() {
                         <div>⏱️ Reçu à : ${timeAgo}</div>
                     </div>
                 ` : `
-                    <div class="flex flex-wrap justify-between items-center pt-2 border-t border-slate-900 gap-2">
+                    <div class="flex flex-wrap justify-between items-center pt-2 border-t border-rose-200/60 gap-2">
                         <span class="text-[11px] text-gray-500">Reçu à ${timeAgo} (Expire dans 30h)</span>
-                        <button onclick="openCheckoutModal('${msg.id}')" class="bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors border border-amber-400/20">
-                            Découvrir les indices (300 FCFA)
+                        <button onclick="openCheckoutModal('${msg.id}')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors border border-rose-300">
+                            Découvrir les indices (300 / 1800 FCFA)
                         </button>
                     </div>
                 `}
