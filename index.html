@@ -27,7 +27,7 @@
     <!-- En-tête de marque -->
     <header class="max-w-4xl mx-auto w-full flex justify-between items-center py-4 border-b border-slate-800/60 mb-6">
         <a href="?" class="cursor-pointer block text-left group">
-            <h1 class="font-heading text-3xl md:text-4xl tracking-wider text-amber-400 group-hover:opacity-90 transition-opacity">WHISPER</h1>
+            <h1 class="font-heading text-3xl md:text-4xl tracking-wider text-emerald-400 group-hover:opacity-90 transition-opacity">WHISPER</h1>
             <p class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest">Afrique Francophone</p>
         </a>
         <div class="flex gap-2" id="headerActions">
@@ -47,7 +47,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                 </div>
                 <span class="inline-block bg-amber-500/10 text-amber-400 text-[11px] px-3 py-1 rounded-full font-semibold mb-2">100% Anonyme</span>
-                <h2 class="text-xl font-bold">Envoyer un Whisper à <span id="targetUsername" class="text-amber-400">@precieux</span></h2>
+                <h2 class="text-xl font-bold">Envoyer un Whisper à <span id="targetUsername" class="text-emerald-400">@precieux</span></h2>
                 <p class="text-xs text-gray-400 mt-1">Dis ce que tu as sur le cœur. Pas d'inscription requise.</p>
             </div>
 
@@ -68,14 +68,9 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-[11px] text-gray-400 flex items-start gap-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>L'expéditeur restera anonyme. Tu pourras toutefois débloquer des indices techniques (appareil, zone, heure) à seulement 300 F CFA.</span>
-                </div>
-
                 <button 
                     type="submit" 
-                    class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/10 transition-all transform active:scale-98 text-sm flex items-center justify-center gap-2"
+                    class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/10 transition-all transform active:scale-98 text-sm flex items-center justify-center gap-2"
                 >
                     <span>Envoyer anonymement</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -181,16 +176,16 @@
                     <div class="grid grid-cols-2 gap-2">
                         <label class="cursor-pointer border border-amber-500/40 bg-amber-500/10 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-amber-500 select-none">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-bold text-amber-400">Journalière</span>
-                                <input type="radio" name="pricingPlan" value="300" checked onchange="updatePaymentPlan(300, '300 FCFA')" class="accent-amber-500">
+                                <span class="text-xs font-bold text-rose-400">Journalière</span>
+                                <input type="radio" name="pricingPlan" value="300" checked onchange="updatePaymentPlan(300, '300 FCFA')" class="accent-rose-500">
                             </div>
                             <span class="text-sm font-extrabold text-white">300 FCFA</span>
                             <span class="text-[10px] text-gray-400 mt-1">Indices & accès instantanés</span>
                         </label>
-                        <label class="cursor-pointer border border-slate-800 bg-slate-950 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-amber-500/50 select-none">
+                        <label class="cursor-pointer border border-rose-800/60 bg-rose-950/20 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-amber-500/50 select-none">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-bold text-amber-400">Hebdomadaire</span>
-                                <input type="radio" name="pricingPlan" value="1800" onchange="updatePaymentPlan(1800, '1800 FCFA')" class="accent-amber-500">
+                                <span class="text-xs font-bold text-rose-400">Hebdomadaire</span>
+                                <input type="radio" name="pricingPlan" value="1800" onchange="updatePaymentPlan(1800, '1800 FCFA')" class="accent-rose-500">
                             </div>
                             <span class="text-sm font-extrabold text-white">1800 FCFA</span>
                             <span class="text-[10px] text-gray-400 mt-1">Pass 7 jours prolongé</span>
