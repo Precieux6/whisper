@@ -20,7 +20,6 @@ export default async function handler(req, res) {
     try {
         const { userId, messageText } = req.body;
 
-        // Récupérer l'abonnement push du destinataire dans Supabase
         const { data: user, error } = await supabase
             .from('users')
             .select('push_subscription')
@@ -32,10 +31,12 @@ export default async function handler(req, res) {
         }
 
         const pushSubscription = user.push_subscription;
+        const originUrl = req.headers.origin || 'https://whisper.bj';
+        
         const payload = JSON.stringify({
             title: 'Nouveau Whisper reçu 🤫',
-            body: `Message : "${messageText.substring(0, 50)}..."`,
-            url: `${req.headers.origin || 'https://whisper.bj'}`
+            body: `Message : "${messageText ? messageText.substring(0, 50) : ''}..."`,
+            url: originUrl
         });
 
         await webpush.sendNotification(pushSubscription, payload);
