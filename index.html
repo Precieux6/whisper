@@ -161,35 +161,95 @@
         </div>
     </div>
 
-    <!-- Modale de Paiement FedaPay -->
+    <!-- Modale de Paiement Avancée (Offres & Multi-moyens) -->
     <div id="checkoutModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl animate-scale-in">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 relative shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white bg-slate-800 p-1.5 rounded-full transition-colors">✕</button>
             
             <div class="text-center mb-5">
                 <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl mx-auto flex items-center justify-center mb-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
-                <h3 class="font-bold text-lg" id="modalTitle">Révéler les indices</h3>
-                <p class="text-xs text-gray-400 mt-1" id="modalDesc">Découvre l'appareil, la zone géographique, l'heure et l'IP de l'expéditeur.</p>
-            </div>
-            
-            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 mb-5 flex justify-between items-center">
-                <span class="text-xs text-gray-400">Montant à régler</span>
-                <span class="font-bold text-amber-400 text-lg" id="modalPrice">300 FCFA</span>
+                <h3 class="font-bold text-lg" id="modalTitle">Choisir une offre & débloquer</h3>
+                <p class="text-xs text-gray-400 mt-1">Sélectionnez votre formule et votre moyen de paiement sécurisé.</p>
             </div>
 
-            <form onsubmit="processFedaPayPayment(event)" class="space-y-3.5">
+            <form onsubmit="processAdvancedPayment(event)" class="space-y-4">
+                <!-- Choix de l'offre -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Nom et Prénoms</label>
-                    <input type="text" id="payerName" required placeholder="Ex: Précieux Tossou" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100">
+                    <label class="block text-xs text-gray-400 mb-1.5 font-semibold">1. Choisir l'offre</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer border border-amber-500/40 bg-amber-500/10 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-amber-500 select-none">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-amber-400">Journalière</span>
+                                <input type="radio" name="pricingPlan" value="300" checked onchange="updatePaymentPlan(300, '300 FCFA')" class="accent-amber-500">
+                            </div>
+                            <span class="text-sm font-extrabold text-white">300 FCFA</span>
+                            <span class="text-[10px] text-gray-400 mt-1">Indices & accès instantanés</span>
+                        </label>
+                        <label class="cursor-pointer border border-slate-800 bg-slate-950 rounded-2xl p-3 flex flex-col justify-between transition-all hover:border-amber-500/50 select-none">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-amber-400">Hebdomadaire</span>
+                                <input type="radio" name="pricingPlan" value="1800" onchange="updatePaymentPlan(1800, '1800 FCFA')" class="accent-amber-500">
+                            </div>
+                            <span class="text-sm font-extrabold text-white">1800 FCFA</span>
+                            <span class="text-[10px] text-gray-400 mt-1">Pass 7 jours prolongé</span>
+                        </label>
+                    </div>
                 </div>
+
+                <!-- Choix du mode de paiement -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Numéro Mobile Money ou Carte</label>
-                    <input type="tel" id="payerPhone" required placeholder="Ex: 97000000 / Numéro MoMo" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100">
+                    <label class="block text-xs text-gray-400 mb-1.5 font-semibold">2. Moyen de paiement</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="btnMethodMoMo" onclick="setPaymentMethod('momo')" class="py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            📱 Mobile Money
+                        </button>
+                        <button type="button" id="btnMethodCard" onclick="setPaymentMethod('card')" class="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950 text-gray-400 text-xs font-bold flex items-center justify-center gap-2 transition-all hover:text-white">
+                            💳 Carte Bancaire
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-amber-500/10 mt-2">
-                    Valider via FedaPay 🚀
+
+                <!-- Informations payeur (Neutres) -->
+                <div class="space-y-3 pt-1">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Nom et Prénoms</label>
+                        <input type="text" id="payerName" required placeholder="Votre nom complet" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100 placeholder-gray-600">
+                    </div>
+
+                    <!-- Champs dynamiques selon le mode -->
+                    <div id="momoFields">
+                        <label class="block text-xs text-gray-400 mb-1">Numéro Mobile Money (MTN / Moov / Celtis)</label>
+                        <input type="tel" id="payerPhone" placeholder="Ex: 97000000" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100 placeholder-gray-600">
+                    </div>
+
+                    <div id="cardFields" class="hidden space-y-3 p-3 bg-slate-950 rounded-2xl border border-slate-800">
+                        <div>
+                            <label class="block text-[11px] text-gray-400 mb-1">Numéro de carte</label>
+                            <input type="text" id="cardNumber" placeholder="4532 •••• •••• ••••" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-gray-100 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] text-gray-400 mb-1">Expiration</label>
+                                <input type="text" id="cardExpiry" placeholder="MM/AA" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-gray-100 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-gray-400 mb-1">CVC / CVV</label>
+                                <input type="password" id="cardCvc" placeholder="123" maxlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-gray-100 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Récapitulatif & Bouton de validation -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                    <span class="text-gray-400">Montant total :</span>
+                    <span class="font-bold text-amber-400 text-base" id="displayTotalAmount">300 FCFA</span>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-amber-500/10">
+                    Procéder au paiement sécurisé via FedaPay 🚀
                 </button>
             </form>
         </div>
