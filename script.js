@@ -369,39 +369,66 @@ function closeCheckoutModal() {
     if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
 }
 
-// Intégration officielle du widget FedaPay sécurisé
-function processFedaPayPayment(e) {
-    e.preventDefault();
-    const nameElem = document.getElementById('payerName');
-    const phoneElem = document.getElementById('payerPhone');
-    if (!nameElem || !phoneElem) return;
+// --- GESTION AVANCÉE DES PAIEMENTS & OFFRES ---
+let selectedPaymentMethod = 'momo';
+let selectedAmount = 300;
 
-    const name = nameElem.value;
-    const phone = phoneElem.value;
-    if (!name || !phone) return;
+function setPaymentMethod(method) {
+    selectedPaymentMethod = method;
+    const btnMoMo = document.getElementById('btnMethodMoMo');
+    const btnCard = document.getElementById('btnMethodCard');
+    const momoFields = document.getElementById('momoFields');
+    const cardFields = document.getElementById('cardFields');
+    const phoneInput = document.getElementById('payerPhone');
+
+    if (method === 'momo') {
+        btnMoMo.className = "py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 text-xs font-bold flex items-center justify-center gap-2 transition-all";
+        btnCard.className = "py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950 text-gray-400 text-xs font-bold flex items-center justify-center gap-2 transition-all hover:text-white";
+        momoFields.classList.remove('hidden');
+        cardFields.classList.add('hidden');
+        if(phoneInput) phoneInput.required = true;
+    } else {
+        btnCard.className = "py-2.5 px-3 rounded-xl border border-amber-500 bg-amber-500/10 text-amber-400 text-xs font-bold flex items-center justify-center gap-2 transition-all";
+        btnMoMo.className = "py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950 text-gray-400 text-xs font-bold flex items-center justify-center gap-2 transition-all hover:text-white";
+        cardFields.classList.remove('hidden');
+        momoFields.classList.add('hidden');
+        if(phoneInput) phoneInput.required = false;
+    }
+}
+
+function updatePaymentPlan(amount, label) {
+    selectedAmount = amount;
+    const totalElem = document.getElementById('displayTotalAmount');
+    if (totalElem) totalElem.textContent = label;
+}
+
+function processAdvancedPayment(e) {
+    e.preventDefault();
+    const name = document.getElementById('payerName').value.trim();
+    if (!name) return;
 
     closeCheckoutModal();
 
-    // Appel au widget FedaPay Checkout (nécessite d'inclure le script fedaPay dans le HTML si ce n'est pas fait)
     if (typeof FedaPay !== 'undefined') {
         let handler = FedaPay.init({
             public_key: 'pk_sandbox_...', // Remplace par ta clé publique FedaPay active
             transaction: {
-                amount: 300,
-                description: `Déblocage indices Whisper #${currentPaymentContext.messageId}`
+                amount: selectedAmount,
+                description: `Whisper Pass (${selectedAmount} FCFA) - Msg #${currentPaymentContext.messageId || 'global'}`
             },
             customer: {
                 name: name,
-                phone_number: phone
+                phone_number: selectedPaymentMethod === 'momo' ? document.getElementById('payerPhone').value : '00000000'
             },
             metadata: {
-                message_id: currentPaymentContext.messageId
+                message_id: currentPaymentContext.messageId,
+                plan: selectedAmount === 1800 ? 'weekly' : 'daily',
+                payment_type: selectedPaymentMethod
             }
         });
         handler.open();
     } else {
-        // Fallback de sécurité si le script FedaPay charge mal
-        alert("Redirection vers la passerelle sécurisée FedaPay...");
+        alert("Passerelle FedaPay en cours de chargement...");
     }
 }
 
@@ -423,7 +450,9 @@ window.openCheckoutModal = openCheckoutModal;
 window.closeCheckoutModal = closeCheckoutModal;
 window.handleCreateUser = handleCreateUser;
 window.handleSendConfession = handleSendConfession;
-window.processFedaPayPayment = processFedaPayPayment;
+window.setPaymentMethod = setPaymentMethod;
+window.updatePaymentPlan = updatePaymentPlan;
+window.processAdvancedPayment = processAdvancedPayment;
 window.copyMyLink = copyMyLink;
 window.switchView = switchView;
 window.updateCounter = updateCounter;
